@@ -1,14 +1,25 @@
 console.log("[autoFollowupResponder] Script loaded ✅");
 
+const banner = document.createElement("div");
+banner.textContent = "🔥 autoFollowupResponder.js loaded";
+banner.style.position = "fixed";
+banner.style.bottom = "0";
+banner.style.left = "0";
+banner.style.background = "black";
+banner.style.color = "white";
+banner.style.padding = "5px";
+banner.style.zIndex = "9999";
+document.body.appendChild(banner);
+
 let lastUserMessageTime = Date.now();
 let followupStage = 0;
 
 function sendBotMessage(msg) {
     console.log(`[autoFollowupResponder] Attempting to send: ${msg}`);
-    if (typeof ST !== 'undefined') {
-        ST.sendMessageToCharacter(msg);
+    if (typeof window.send_message === 'function') {
+        window.send_message(msg, {is_user: false});
     } else {
-        console.warn("[autoFollowupResponder] ST is undefined.");
+        console.warn("[autoFollowupResponder] send_message is not available.");
     }
 }
 
@@ -35,13 +46,31 @@ function monitorSilence() {
     }
 }
 
-// Hook into user messages
-if (typeof ST !== 'undefined') {
-    ST.onUserMessage(() => {
-        resetTimer();
-    });
-} else {
-    console.warn("[autoFollowupResponder] ST is not ready yet.");
+// Use MutationObserver to detect new user messages in the chat
+function setupUserMessageObserver() {
+    const chatContainer = document.querySelector("#chat");
+    if (chatContainer) {
+        const observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                for (const node of mutation.addedNodes) {
+                    if (
+                        node.nodeType === 1 &&
+                        node.classList.contains("mes") &&
+                        node.classList.contains("mes_user")
+                    ) {
+                        resetTimer();
+                    }
+                }
+            }
+        });
+        observer.observe(chatContainer, { childList: true, subtree: true });
+        console.log("[autoFollowupResponder] User message observer set up.");
+    } else {
+        console.warn("[autoFollowupResponder] Chat container not found.");
+    }
 }
 
-setInterval(monitorSilence, 5000);
+window.addEventListener("DOMContentLoaded", () => {
+    setupUserMessageObserver();
+    setInterval(monitorSilence, 5000);
+});
