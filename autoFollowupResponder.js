@@ -1,26 +1,27 @@
-window.alert("✅ Auto Follow-Up Extension Loaded!");
-console.log("[autoFollowupResponder] Extension loaded.");
+console.log("[autoFollowupResponder] Script loaded ✅");
 
 let lastUserMessageTime = Date.now();
 let followupStage = 0;
-let checkInterval = null;
 
-function sendBotMessage(message) {
-    console.log(`[autoFollowupResponder] Sending message: ${message}`);
-    // @ts-ignore
-    ST.sendMessageToCharacter(message);
+function sendBotMessage(msg) {
+    console.log(`[autoFollowupResponder] Attempting to send: ${msg}`);
+    if (typeof ST !== 'undefined') {
+        ST.sendMessageToCharacter(msg);
+    } else {
+        console.warn("[autoFollowupResponder] ST is undefined.");
+    }
 }
 
-function resetFollowup() {
+function resetTimer() {
     followupStage = 0;
     lastUserMessageTime = Date.now();
-    console.log("[autoFollowupResponder] User activity detected. Timer reset.");
+    console.log("[autoFollowupResponder] Timer reset.");
 }
 
-function monitorInactivity() {
-    const now = Date.now();
-    const elapsed = (now - lastUserMessageTime) / 1000;
-    console.log(`[autoFollowupResponder] Inactivity time: ${elapsed.toFixed(1)}s`);
+function monitorSilence() {
+    const elapsed = (Date.now() - lastUserMessageTime) / 1000;
+
+    console.log(`[autoFollowupResponder] Inactivity: ${elapsed}s`);
 
     if (followupStage === 0 && elapsed > 60) {
         sendBotMessage("...Hey, you still there?");
@@ -34,9 +35,13 @@ function monitorInactivity() {
     }
 }
 
-// Hook into message system
-ST.onUserMessage((msg) => {
-    resetFollowup();
-});
+// Hook into user messages
+if (typeof ST !== 'undefined') {
+    ST.onUserMessage(() => {
+        resetTimer();
+    });
+} else {
+    console.warn("[autoFollowupResponder] ST is not ready yet.");
+}
 
-checkInterval = setInterval(monitorInactivity, 5000);
+setInterval(monitorSilence, 5000);
