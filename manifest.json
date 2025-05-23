@@ -1,7 +1,7 @@
 {
-  "name": "Auto Follow-Up Responder",
+  "display_name": "Auto Follow-Up Responder",
   "description": "Character follows up if you stop replying.",
-  "author": "Orlando Ramirez + Yumi",
+  "author": "Orlando Ramirez + Yumi-chan",
   "version": "1.0",
-  "main": "autoFollowupResponder.js"
+  "js": "autoFollowupResponder.js"
 }
